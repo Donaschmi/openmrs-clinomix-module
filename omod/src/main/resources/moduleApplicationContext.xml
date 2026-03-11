@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <!--
+        OMOD-specific Spring beans go here (e.g. web controllers, REST resources).
+        Core service and DAO beans are defined in the api module's moduleApplicationContext.xml.
+    -->
+
+    <!--
+        FHIR Resource Providers.
+        The FHIR2 module's FhirRestServlet auto-discovers all IResourceProvider beans
+        from the Spring application context, so these just need to be defined here.
+        They will be served at /ws/fhir2/R4/Questionnaire and /ws/fhir2/R4/QuestionnaireResponse.
+    -->
+    <bean id="clinomix.QuestionnaireResourceProvider"
+          class="org.openmrs.module.clinomix.web.fhir.QuestionnaireResourceProvider"/>
+
+    <bean id="clinomix.QuestionnaireResponseResourceProvider"
+          class="org.openmrs.module.clinomix.web.fhir.QuestionnaireResponseResourceProvider"/>
+
+
+</beans>

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="org.openmrs.module.clinomix.model.Study" table="clinomix_study">
+
+        <id name="id" type="int" column="study_id">
+            <generator class="native"/>
+        </id>
+
+        <property name="uuid" column="uuid" not-null="true" unique="true" length="38"/>
+        <property name="name" column="name" not-null="true" length="255"/>
+        <property name="description" column="description" type="text"/>
+        <property name="status" column="status" not-null="true" length="20"/>
+        <property name="questionnaireIdsJson" column="questionnaire_ids" type="text"/>
+        <property name="dateCreated" column="date_created" not-null="true"/>
+        <property name="dateChanged" column="date_changed"/>
+
+        <bag name="responses" cascade="all-delete-orphan" inverse="true" lazy="false">
+            <key column="study_id"/>
+            <one-to-many class="org.openmrs.module.clinomix.model.StudyResponse"/>
+        </bag>
+
+    </class>
+</hibernate-mapping>
