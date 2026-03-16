@@ -15,11 +15,11 @@
         from the Spring application context, so these just need to be defined here.
         They will be served at /ws/fhir2/R4/Questionnaire and /ws/fhir2/R4/QuestionnaireResponse.
     -->
-    <bean id="clinomix.QuestionnaireResourceProvider"
-          class="org.openmrs.module.clinomix.web.fhir.QuestionnaireResourceProvider"/>
+    <bean id="clinom-x.QuestionnaireResourceProvider"
+          class="org.openmrs.module.clinomx.web.fhir.QuestionnaireResourceProvider"/>
 
-    <bean id="clinomix.QuestionnaireResponseResourceProvider"
-          class="org.openmrs.module.clinomix.web.fhir.QuestionnaireResponseResourceProvider"/>
+    <bean id="clinom-x.QuestionnaireResponseResourceProvider"
+          class="org.openmrs.module.clinomx.web.fhir.QuestionnaireResponseResourceProvider"/>
 
 
 </beans>

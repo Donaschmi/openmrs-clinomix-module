@@ -4,16 +4,16 @@
 <module configVersion="1.6">
 
     <!-- Base Module Properties -->
-    <id>clinomix</id>
-    <name>Clinomix</name>
+    <id>clinom-x</id>
+    <name>ClinomX</name>
     <version>1.0.0-SNAPSHOT</version>
-    <package>org.openmrs.module.clinomix</package>
-    <author>Clinomix Team</author>
+    <package>org.openmrs.module.clinomx</package>
+    <author>ClinomX Team</author>
     <description>
-        Clinomix backend module for OpenMRS. Provides REST APIs and business logic
-        for the Clinomix frontend application.
+        ClinomX backend module for OpenMRS. Provides REST APIs and business logic
+        for the ClinomX frontend application.
     </description>
-    <activator>org.openmrs.module.clinomix.ClinomixActivator</activator>
+    <activator>org.openmrs.module.clinomx.ClinomXActivator</activator>
 
     <!-- <updateURL>https://modules.openmrs.org/modules/download/@MODULE_ID@/update.rdf</updateURL> -->
 
@@ -28,25 +28,25 @@
 
     <!-- Module Privileges -->
     <privilege>
-        <name>Get Clinomix Data</name>
-        <description>Ability to read Clinomix module data</description>
+        <name>Get ClinomX Data</name>
+        <description>Ability to read ClinomX module data</description>
     </privilege>
     <privilege>
-        <name>Manage Clinomix Data</name>
-        <description>Ability to create, update, and delete Clinomix module data</description>
+        <name>Manage ClinomX Data</name>
+        <description>Ability to create, update, and delete ClinomX module data</description>
     </privilege>
 
     <!-- Global Properties -->
     <globalProperty>
-        <property>clinomix.defaultLocale</property>
+        <property>clinom-x.defaultLocale</property>
         <defaultValue>en</defaultValue>
-        <description>Default locale for the Clinomix module</description>
+        <description>Default locale for the ClinomX module</description>
     </globalProperty>
     <globalProperty>
-        <property>clinomix.fhirServerUrl</property>
-        <defaultValue>http://clinomix-hapi-fhir:8080/fhir</defaultValue>
+        <property>clinom-x.fhirServerUrl</property>
+        <defaultValue>http://clinom-x-hapi-fhir:8080/fhir</defaultValue>
         <description>
-            Base URL of the HAPI FHIR JPA server used by the Clinomix module.
+            Base URL of the HAPI FHIR JPA server used by the ClinomX module.
             Example: http://localhost:8082/fhir
             Change this to point to a remote FHIR server if needed.
         </description>

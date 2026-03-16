@@ -9,13 +9,13 @@
         Each changeSet should have a unique id and author.
 
         Example:
-        <changeSet id="clinomix-2024-01-01-001" author="clinomix">
+        <changeSet id="clinom-x-2024-01-01-001" author="clinom-x">
             <preConditions onFail="MARK_RAN">
-                <not><tableExists tableName="clinomix_example"/></not>
+                <not><tableExists tableName="clinom_x_example"/></not>
             </preConditions>
-            <comment>Create clinomix_example table</comment>
-            <createTable tableName="clinomix_example">
-                <column name="clinomix_example_id" type="int" autoIncrement="true">
+            <comment>Create clinom_x_example table</comment>
+            <createTable tableName="clinom_x_example">
+                <column name="clinom_x_example_id" type="int" autoIncrement="true">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
                 <column name="name" type="varchar(255)">
@@ -36,57 +36,5 @@
         </changeSet>
     -->
 
-    <changeSet id="clinomix-2024-01-01-study-001" author="clinomix">
-        <preConditions onFail="MARK_RAN">
-            <not><tableExists tableName="clinomix_study"/></not>
-        </preConditions>
-        <comment>Create clinomix_study table</comment>
-        <createTable tableName="clinomix_study">
-            <column name="study_id" type="int" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="uuid" type="char(38)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-            <column name="name" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="description" type="text"/>
-            <column name="status" type="varchar(20)" defaultValue="ACTIVE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="questionnaire_ids" type="text"/>
-            <column name="date_created" type="datetime">
-                <constraints nullable="false"/>
-            </column>
-            <column name="date_changed" type="datetime"/>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="clinomix-2024-01-01-study-002" author="clinomix">
-        <preConditions onFail="MARK_RAN">
-            <not><tableExists tableName="clinomix_study_response"/></not>
-        </preConditions>
-        <comment>Create clinomix_study_response join table</comment>
-        <createTable tableName="clinomix_study_response">
-            <column name="id" type="int" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="study_id" type="int">
-                <constraints nullable="false"
-                             foreignKeyName="fk_clinomix_study_response_study"
-                             references="clinomix_study(study_id)"/>
-            </column>
-            <column name="questionnaire_response_fhir_id" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="date_added" type="datetime">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-        <createIndex tableName="clinomix_study_response" indexName="idx_study_response_study_id">
-            <column name="study_id"/>
-        </createIndex>
-    </changeSet>
 
 </databaseChangeLog>
