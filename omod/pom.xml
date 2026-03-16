@@ -50,7 +50,7 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-        <!-- HAPI FHIR -->
+        <!-- HAPI FHIR — all provided at runtime by the fhir2 OMOD -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-base</artifactId>

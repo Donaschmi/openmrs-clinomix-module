@@ -89,36 +89,6 @@
         </property>
     </bean>
 
-    <!-- Study DAO -->
-    <bean id="clinomix.StudyDao"
-          class="org.openmrs.module.clinomix.dao.impl.StudyDaoImpl">
-        <property name="sessionFactory" ref="sessionFactory"/>
-    </bean>
-
-    <!-- Study Service -->
-    <bean id="clinomix.StudyService"
-          class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
-        <property name="transactionManager" ref="transactionManager"/>
-        <property name="target">
-            <bean class="org.openmrs.module.clinomix.api.impl.StudyServiceImpl">
-                <property name="studyDao" ref="clinomix.StudyDao"/>
-                <property name="fhirClientFactory" ref="clinomix.FhirClientFactory"/>
-                <property name="fhirContext" ref="clinomix.FhirContext"/>
-            </bean>
-        </property>
-        <property name="preInterceptors" ref="serviceInterceptors"/>
-        <property name="transactionAttributeSource" ref="transactionAttributeSource"/>
-    </bean>
-
-    <bean parent="serviceContext">
-        <property name="moduleService">
-            <list>
-                <value>org.openmrs.module.clinomix.api.StudyService</value>
-                <ref bean="clinomix.StudyService"/>
-            </list>
-        </property>
-    </bean>
-
     <!-- FHIR QuestionnaireResponse Service -->
     <bean id="clinomix.FhirQuestionnaireResponseService"
           class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
@@ -127,7 +97,7 @@
         </property>
         <property name="target">
             <bean class="org.openmrs.module.clinomix.api.impl.FhirQuestionnaireResponseServiceImpl">
-                <property name="fhirContext" ref="clinomix.FhirContext"/>
+                <property name="fhirClientFactory" ref="clinomix.FhirClientFactory"/>
                 <property name="dao" ref="clinomix.ClinomixDao"/>
             </bean>
         </property>

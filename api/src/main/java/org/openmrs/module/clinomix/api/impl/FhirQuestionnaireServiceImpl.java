@@ -1,9 +1,7 @@
 package org.openmrs.module.clinomix.api.impl;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
-import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,17 +18,13 @@ import org.openmrs.module.clinomix.dao.ClinomixDao;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link FhirQuestionnaireService}.
- * Delegates FHIR resource storage to an external HAPI FHIR JPA server whose
- * URL is configured via the OpenMRS global property {@code clinomix.fhirServerUrl}.
- *
- * Version history is persisted as JSON arrays in OpenMRS global properties
- * (key: {@code clinomix.history.<questionnaireId>}).
+ * Delegates FHIR resource storage to an external HAPI FHIR JPA server via
+ * {@link FhirClientFactory}, using Spring RestTemplate for HTTP transport.
  */
 @Transactional
 public class FhirQuestionnaireServiceImpl extends BaseOpenmrsService implements FhirQuestionnaireService {
@@ -64,12 +58,7 @@ public class FhirQuestionnaireServiceImpl extends BaseOpenmrsService implements 
 
     @Override
     public List<Questionnaire> getQuestionnaires() {
-        Bundle bundle = fhirClientFactory.getClient()
-                .search()
-                .forResource(Questionnaire.class)
-                .returnBundle(Bundle.class)
-                .execute();
-
+        Bundle bundle = fhirClientFactory.getClient().search("Questionnaire", null);
         return bundle.getEntry().stream()
                 .filter(e -> e.getResource() instanceof Questionnaire)
                 .map(e -> (Questionnaire) e.getResource())
@@ -78,28 +67,22 @@ public class FhirQuestionnaireServiceImpl extends BaseOpenmrsService implements 
 
     @Override
     public Questionnaire getQuestionnaireById(String id) {
-        return fhirClientFactory.getClient()
-                .read()
-                .resource(Questionnaire.class)
-                .withId(id)
-                .execute();
+        return fhirClientFactory.getClient().read(Questionnaire.class, id);
     }
 
     @Override
     public IBundleProvider searchQuestionnaires(String title, Integer count, String sort) {
-        IQuery<Bundle> query = fhirClientFactory.getClient()
-                .search()
-                .forResource(Questionnaire.class)
-                .returnBundle(Bundle.class);
-
+        StringBuilder params = new StringBuilder();
         if (StringUtils.isNotBlank(title)) {
-            query = query.where(Questionnaire.TITLE.contains().value(title));
+            params.append("title:contains=").append(title);
         }
         if (count != null) {
-            query = query.count(count);
+            if (params.length() > 0) params.append("&");
+            params.append("_count=").append(count);
         }
 
-        Bundle bundle = query.execute();
+        Bundle bundle = fhirClientFactory.getClient()
+                .search("Questionnaire", params.length() > 0 ? params.toString() : null);
         List<IBaseResource> resources = bundle.getEntry().stream()
                 .filter(e -> e.getResource() instanceof Questionnaire)
                 .map(e -> (IBaseResource) e.getResource())
@@ -110,31 +93,18 @@ public class FhirQuestionnaireServiceImpl extends BaseOpenmrsService implements 
 
     @Override
     public Questionnaire createQuestionnaire(Questionnaire questionnaire) {
-        MethodOutcome outcome = fhirClientFactory.getClient()
-                .create()
-                .resource(questionnaire)
-                .execute();
-
-        return (Questionnaire) outcome.getResource();
+        return fhirClientFactory.getClient().create(questionnaire);
     }
 
     @Override
     public Questionnaire updateQuestionnaire(String id, Questionnaire questionnaire) {
         questionnaire.setId(id);
-        MethodOutcome outcome = fhirClientFactory.getClient()
-                .update()
-                .resource(questionnaire)
-                .execute();
-
-        return (Questionnaire) outcome.getResource();
+        return fhirClientFactory.getClient().update(questionnaire, id);
     }
 
     @Override
     public void deleteQuestionnaire(String id) {
-        fhirClientFactory.getClient()
-                .delete()
-                .resourceById("Questionnaire", id)
-                .execute();
+        fhirClientFactory.getClient().delete("Questionnaire", id);
     }
 
     // ── Version history ────────────────────────────────────────────────────────

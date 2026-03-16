@@ -44,19 +44,13 @@
     </globalProperty>
     <globalProperty>
         <property>clinomix.fhirServerUrl</property>
-        <defaultValue>http://localhost:8082/fhir</defaultValue>
+        <defaultValue>http://clinomix-hapi-fhir:8080/fhir</defaultValue>
         <description>
             Base URL of the HAPI FHIR JPA server used by the Clinomix module.
             Example: http://localhost:8082/fhir
             Change this to point to a remote FHIR server if needed.
         </description>
     </globalProperty>
-
-    <!-- Mapping files -->
-    <mappingFiles>
-        org/openmrs/module/clinomix/model/Study.hbm.xml
-        org/openmrs/module/clinomix/model/StudyResponse.hbm.xml
-    </mappingFiles>
 
     <!-- Internationalization -->
     <messages>
