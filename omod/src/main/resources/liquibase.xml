@@ -9,13 +9,13 @@
         Each changeSet should have a unique id and author.
 
         Example:
-        <changeSet id="clinomix-2024-01-01-001" author="clinomix">
+        <changeSet id="clinom-x-2024-01-01-001" author="clinom-x">
             <preConditions onFail="MARK_RAN">
-                <not><tableExists tableName="clinomix_example"/></not>
+                <not><tableExists tableName="clinom_x_example"/></not>
             </preConditions>
-            <comment>Create clinomix_example table</comment>
-            <createTable tableName="clinomix_example">
-                <column name="clinomix_example_id" type="int" autoIncrement="true">
+            <comment>Create clinom_x_example table</comment>
+            <createTable tableName="clinom_x_example">
+                <column name="clinom_x_example_id" type="int" autoIncrement="true">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
                 <column name="name" type="varchar(255)">
@@ -36,12 +36,12 @@
         </changeSet>
     -->
 
-    <changeSet id="clinomix-2024-01-01-study-001" author="clinomix">
+    <changeSet id="clinom-x-2024-01-01-study-001" author="clinom-x">
         <preConditions onFail="MARK_RAN">
-            <not><tableExists tableName="clinomix_study"/></not>
+            <not><tableExists tableName="clinom_x_study"/></not>
         </preConditions>
-        <comment>Create clinomix_study table</comment>
-        <createTable tableName="clinomix_study">
+        <comment>Create clinom_x_study table</comment>
+        <createTable tableName="clinom_x_study">
             <column name="study_id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -63,19 +63,19 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="clinomix-2024-01-01-study-002" author="clinomix">
+    <changeSet id="clinom-x-2024-01-01-study-002" author="clinom-x">
         <preConditions onFail="MARK_RAN">
-            <not><tableExists tableName="clinomix_study_response"/></not>
+            <not><tableExists tableName="clinom_x_study_response"/></not>
         </preConditions>
-        <comment>Create clinomix_study_response join table</comment>
-        <createTable tableName="clinomix_study_response">
+        <comment>Create clinom_x_study_response join table</comment>
+        <createTable tableName="clinom_x_study_response">
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="study_id" type="int">
                 <constraints nullable="false"
-                             foreignKeyName="fk_clinomix_study_response_study"
-                             references="clinomix_study(study_id)"/>
+                             foreignKeyName="fk_clinom_x_study_response_study"
+                             references="clinom_x_study(study_id)"/>
             </column>
             <column name="questionnaire_response_fhir_id" type="varchar(255)">
                 <constraints nullable="false"/>
@@ -84,7 +84,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <createIndex tableName="clinomix_study_response" indexName="idx_study_response_study_id">
+        <createIndex tableName="clinom_x_study_response" indexName="idx_study_response_study_id">
             <column name="study_id"/>
         </createIndex>
     </changeSet>
