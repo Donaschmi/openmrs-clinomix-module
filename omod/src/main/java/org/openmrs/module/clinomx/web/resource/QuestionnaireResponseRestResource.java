@@ -21,11 +21,14 @@ import java.util.stream.Collectors;
  * REST resource for FHIR R4 QuestionnaireResponse resources.
  *
  * Endpoints:
- *   GET    /ws/rest/v1/questionnaireresponse            — list all
- *   GET    /ws/rest/v1/questionnaireresponse/{id}       — get by id
- *   POST   /ws/rest/v1/questionnaireresponse            — create (body: {"json":"<FHIR JSON>"})
- *   POST   /ws/rest/v1/questionnaireresponse/{id}       — update (body: {"json":"<FHIR JSON>"})
- *   DELETE /ws/rest/v1/questionnaireresponse/{id}       — delete
+ *   GET    /ws/rest/v1/questionnaireresponse                              — list all
+ *   GET    /ws/rest/v1/questionnaireresponse?questionnaire={uuid}        — by questionnaire
+ *   GET    /ws/rest/v1/questionnaireresponse?patient={uuid}              — by patient
+ *   GET    /ws/rest/v1/questionnaireresponse?questionnaire={q}&patient={p} — both filters
+ *   GET    /ws/rest/v1/questionnaireresponse/{uuid}                      — get by uuid
+ *   POST   /ws/rest/v1/questionnaireresponse                             — create (body: {"json":"<FHIR JSON>"})
+ *   POST   /ws/rest/v1/questionnaireresponse/{uuid}                      — update (body: {"json":"<FHIR JSON>"})
+ *   DELETE /ws/rest/v1/questionnaireresponse/{uuid}                      — delete
  */
 @Resource(name = RestConstants.VERSION_1 + "/questionnaireresponse",
         supportedClass = QuestionnaireResponseDelegate.class,
@@ -68,8 +71,8 @@ public class QuestionnaireResponseRestResource extends DelegatingCrudResource<Qu
     }
 
     @Override
-    public QuestionnaireResponseDelegate getByUniqueId(String id) {
-        QuestionnaireResponse r = getService().getQuestionnaireResponseById(id);
+    public QuestionnaireResponseDelegate getByUniqueId(String uuid) {
+        QuestionnaireResponse r = getService().getQuestionnaireResponseByUuid(uuid);
         return toDelegate(r);
     }
 
@@ -104,13 +107,29 @@ public class QuestionnaireResponseRestResource extends DelegatingCrudResource<Qu
 
     @Override
     protected NeedsPaging<QuestionnaireResponseDelegate> doGetAll(RequestContext context) throws ResponseException {
-        List<QuestionnaireResponseDelegate> all = getService()
-                .searchQuestionnaireResponses(null, null, null)
-                .getResources(0, Integer.MAX_VALUE).stream()
-                .filter(r -> r instanceof QuestionnaireResponse)
-                .map(r -> toDelegate((QuestionnaireResponse) r))
+        List<QuestionnaireResponseDelegate> all = getService().getAllQuestionnaireResponses().stream()
+                .map(this::toDelegate)
                 .collect(Collectors.toList());
         return new NeedsPaging<>(all, context);
+    }
+
+    @Override
+    protected NeedsPaging<QuestionnaireResponseDelegate> doSearch(RequestContext context) {
+        String questionnaireUuid = context.getRequest().getParameter("questionnaire");
+        String patientUuid = context.getRequest().getParameter("patient");
+
+        List<QuestionnaireResponse> results;
+        if (questionnaireUuid != null && patientUuid != null) {
+            results = getService().getResponsesByQuestionnaireAndPatient(questionnaireUuid, patientUuid);
+        } else if (questionnaireUuid != null) {
+            results = getService().getResponsesByQuestionnaire(questionnaireUuid);
+        } else if (patientUuid != null) {
+            results = getService().getResponsesByPatient(patientUuid);
+        } else {
+            results = getService().getAllQuestionnaireResponses();
+        }
+
+        return new NeedsPaging<>(results.stream().map(this::toDelegate).collect(Collectors.toList()), context);
     }
 
     private QuestionnaireResponseDelegate toDelegate(QuestionnaireResponse r) {

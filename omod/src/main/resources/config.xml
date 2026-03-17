@@ -42,17 +42,8 @@
         <defaultValue>en</defaultValue>
         <description>Default locale for the ClinomX module</description>
     </globalProperty>
-    <globalProperty>
-        <property>clinom-x.fhirServerUrl</property>
-        <defaultValue>http://clinom-x-hapi-fhir:8080/fhir</defaultValue>
-        <description>
-            Base URL of the HAPI FHIR JPA server used by the ClinomX module.
-            Example: http://localhost:8082/fhir
-            Change this to point to a remote FHIR server if needed.
-        </description>
-    </globalProperty>
 
-    <!-- Internationalization -->
+<!-- Internationalization -->
     <messages>
         <lang>en</lang>
         <file>messages.properties</file>

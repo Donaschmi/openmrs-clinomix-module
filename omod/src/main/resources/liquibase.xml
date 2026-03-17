@@ -36,5 +36,71 @@
         </changeSet>
     -->
 
+    <changeSet id="clinom-x-2024-01-01-questionnaire-001" author="clinom-x">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="clinom_x_questionnaire"/></not>
+        </preConditions>
+        <comment>Create clinom_x_questionnaire table</comment>
+        <createTable tableName="clinom_x_questionnaire">
+            <column name="questionnaire_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="uuid" type="char(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="fhir_id" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="title" type="varchar(255)"/>
+            <column name="status" type="varchar(20)"/>
+            <column name="fhir_json" type="longtext">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_changed" type="datetime"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="clinom-x-2024-01-01-questionnaire-002" author="clinom-x">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="clinom_x_questionnaire_response"/></not>
+        </preConditions>
+        <comment>Create clinom_x_questionnaire_response table</comment>
+        <createTable tableName="clinom_x_questionnaire_response">
+            <column name="response_id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="uuid" type="char(38)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="fhir_id" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="questionnaire_id" type="int">
+                <constraints nullable="false"
+                             foreignKeyName="fk_clinom_x_response_questionnaire"
+                             references="clinom_x_questionnaire(questionnaire_id)"/>
+            </column>
+            <column name="patient_uuid" type="char(38)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)"/>
+            <column name="authored" type="datetime"/>
+            <column name="fhir_json" type="longtext">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="clinom_x_questionnaire_response" indexName="idx_clinom_x_response_questionnaire_id">
+            <column name="questionnaire_id"/>
+        </createIndex>
+        <createIndex tableName="clinom_x_questionnaire_response" indexName="idx_clinom_x_response_patient_uuid">
+            <column name="patient_uuid"/>
+        </createIndex>
+    </changeSet>
 
 </databaseChangeLog>

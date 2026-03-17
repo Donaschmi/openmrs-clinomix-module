@@ -7,7 +7,6 @@ import org.openmrs.module.clinomx.api.FhirQuestionnaireService;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
-import org.openmrs.module.webservices.rest.web.representation.DefaultRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.FullRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingCrudResource;
@@ -22,11 +21,12 @@ import java.util.stream.Collectors;
  * REST resource for FHIR R4 Questionnaire resources.
  *
  * Endpoints:
- *   GET    /ws/rest/v1/questionnaire            — list all
- *   GET    /ws/rest/v1/questionnaire/{id}       — get by id
- *   POST   /ws/rest/v1/questionnaire            — create (body: {"json":"<FHIR JSON>"})
- *   POST   /ws/rest/v1/questionnaire/{id}       — update (body: {"json":"<FHIR JSON>"})
- *   DELETE /ws/rest/v1/questionnaire/{id}       — delete
+ *   GET    /ws/rest/v1/questionnaire              — list all
+ *   GET    /ws/rest/v1/questionnaire?title=X      — search by title
+ *   GET    /ws/rest/v1/questionnaire/{uuid}       — get by uuid
+ *   POST   /ws/rest/v1/questionnaire              — create  (body: {"json":"<FHIR JSON>"})
+ *   POST   /ws/rest/v1/questionnaire/{uuid}       — update  (body: {"json":"<FHIR JSON>"})
+ *   DELETE /ws/rest/v1/questionnaire/{uuid}       — delete
  */
 @Resource(name = RestConstants.VERSION_1 + "/questionnaire",
         supportedClass = QuestionnaireDelegate.class,
@@ -71,8 +71,8 @@ public class QuestionnaireRestResource extends DelegatingCrudResource<Questionna
     }
 
     @Override
-    public QuestionnaireDelegate getByUniqueId(String id) {
-        Questionnaire q = getService().getQuestionnaireById(id);
+    public QuestionnaireDelegate getByUniqueId(String uuid) {
+        Questionnaire q = getService().getQuestionnaireByUuid(uuid);
         return toDelegate(q);
     }
 
@@ -105,10 +105,26 @@ public class QuestionnaireRestResource extends DelegatingCrudResource<Questionna
 
     @Override
     protected NeedsPaging<QuestionnaireDelegate> doGetAll(RequestContext context) throws ResponseException {
-        List<QuestionnaireDelegate> all = getService().getQuestionnaires().stream()
+        List<QuestionnaireDelegate> all = getService().getAllQuestionnaires().stream()
                 .map(this::toDelegate)
                 .collect(Collectors.toList());
         return new NeedsPaging<>(all, context);
+    }
+
+    @Override
+    protected NeedsPaging<QuestionnaireDelegate> doSearch(RequestContext context) {
+        String title = context.getRequest().getParameter("title");
+        List<QuestionnaireDelegate> results;
+        if (title != null && !title.isEmpty()) {
+            results = getService().searchQuestionnairesByTitle(title).stream()
+                    .map(this::toDelegate)
+                    .collect(Collectors.toList());
+        } else {
+            results = getService().getAllQuestionnaires().stream()
+                    .map(this::toDelegate)
+                    .collect(Collectors.toList());
+        }
+        return new NeedsPaging<>(results, context);
     }
 
     private QuestionnaireDelegate toDelegate(Questionnaire q) {

@@ -4,20 +4,9 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <!-- Shared FHIR R4 context — created once, used by all FHIR services -->
+    <!-- Shared FHIR R4 context — used as a library for parse/validate/serialize -->
     <bean id="clinom-x.FhirContext" class="ca.uhn.fhir.context.FhirContext"
-          factory-method="forR4"/>
-
-    <!--
-        FHIR client factory — reads the global property clinom-x.fhirServerUrl at
-        call time so the FHIR server endpoint can be changed in Administration →
-        Advanced Settings without restarting OpenMRS.
-        Default URL: http://localhost:8082/fhir
-    -->
-    <bean id="clinom-x.FhirClientFactory"
-          class="org.openmrs.module.clinomx.api.FhirClientFactory">
-        <constructor-arg ref="clinom-x.FhirContext"/>
-    </bean>
+          factory-method="forR4Cached"/>
 
     <!-- DAO -->
     <bean id="clinom-x.ClinomXDao"
@@ -27,28 +16,19 @@
         </property>
     </bean>
 
-    <!-- Service proxy with transaction and authorization interceptors -->
+    <!-- ClinomX Service -->
     <bean id="clinom-x.ClinomXService"
           class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
-        <property name="transactionManager">
-            <ref bean="transactionManager"/>
-        </property>
+        <property name="transactionManager"><ref bean="transactionManager"/></property>
         <property name="target">
             <bean class="org.openmrs.module.clinomx.api.impl.ClinomXServiceImpl">
-                <property name="dao">
-                    <ref bean="clinom-x.ClinomXDao"/>
-                </property>
+                <property name="dao"><ref bean="clinom-x.ClinomXDao"/></property>
             </bean>
         </property>
-        <property name="preInterceptors">
-            <ref bean="serviceInterceptors"/>
-        </property>
-        <property name="transactionAttributeSource">
-            <ref bean="transactionAttributeSource"/>
-        </property>
+        <property name="preInterceptors"><ref bean="serviceInterceptors"/></property>
+        <property name="transactionAttributeSource"><ref bean="transactionAttributeSource"/></property>
     </bean>
 
-    <!-- Register service with OpenMRS service context -->
     <bean parent="serviceContext">
         <property name="moduleService">
             <list>
@@ -58,26 +38,18 @@
         </property>
     </bean>
 
-    <!-- FHIR Questionnaire Service -->
+    <!-- Questionnaire Service -->
     <bean id="clinom-x.FhirQuestionnaireService"
           class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
-        <property name="transactionManager">
-            <ref bean="transactionManager"/>
-        </property>
+        <property name="transactionManager"><ref bean="transactionManager"/></property>
         <property name="target">
             <bean class="org.openmrs.module.clinomx.api.impl.FhirQuestionnaireServiceImpl">
                 <property name="fhirContext" ref="clinom-x.FhirContext"/>
-                <property name="fhirClientFactory" ref="clinom-x.FhirClientFactory"/>
-                <property name="administrationService" ref="adminService"/>
                 <property name="dao" ref="clinom-x.ClinomXDao"/>
             </bean>
         </property>
-        <property name="preInterceptors">
-            <ref bean="serviceInterceptors"/>
-        </property>
-        <property name="transactionAttributeSource">
-            <ref bean="transactionAttributeSource"/>
-        </property>
+        <property name="preInterceptors"><ref bean="serviceInterceptors"/></property>
+        <property name="transactionAttributeSource"><ref bean="transactionAttributeSource"/></property>
     </bean>
 
     <bean parent="serviceContext">
@@ -89,33 +61,18 @@
         </property>
     </bean>
 
-    <!-- FHIR QuestionnaireResponse Service -->
+    <!-- QuestionnaireResponse Service -->
     <bean id="clinom-x.FhirQuestionnaireResponseService"
           class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
-        <property name="transactionManager">
-            <ref bean="transactionManager"/>
-        </property>
+        <property name="transactionManager"><ref bean="transactionManager"/></property>
         <property name="target">
             <bean class="org.openmrs.module.clinomx.api.impl.FhirQuestionnaireResponseServiceImpl">
-                <property name="fhirClientFactory" ref="clinom-x.FhirClientFactory"/>
+                <property name="fhirContext" ref="clinom-x.FhirContext"/>
                 <property name="dao" ref="clinom-x.ClinomXDao"/>
             </bean>
         </property>
-        <property name="preInterceptors">
-            <ref bean="serviceInterceptors"/>
-        </property>
-        <property name="transactionAttributeSource">
-            <ref bean="transactionAttributeSource"/>
-        </property>
-    </bean>
-
-    <bean parent="serviceContext">
-        <property name="moduleService">
-            <list>
-                <value>org.openmrs.module.clinomx.api.FhirQuestionnaireResponseService</value>
-                <ref bean="clinom-x.FhirQuestionnaireResponseService"/>
-            </list>
-        </property>
+        <property name="preInterceptors"><ref bean="serviceInterceptors"/></property>
+        <property name="transactionAttributeSource"><ref bean="transactionAttributeSource"/></property>
     </bean>
 
 </beans>

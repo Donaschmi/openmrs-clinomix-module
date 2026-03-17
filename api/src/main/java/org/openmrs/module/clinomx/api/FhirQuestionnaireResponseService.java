@@ -1,46 +1,46 @@
 package org.openmrs.module.clinomx.api;
 
-import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.OpenmrsService;
 import org.openmrs.module.clinomx.ClinomXPrivileges;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * Service interface for managing FHIR R4 QuestionnaireResponse resources.
- * Endpoints served: /ws/fhir2/R4/QuestionnaireResponse
+ * Resources are stored as JSON blobs in the OpenMRS database.
+ *
+ * Endpoints served: /ws/rest/v1/questionnaireresponse
  */
 @Transactional
 public interface FhirQuestionnaireResponseService extends OpenmrsService {
 
-    /**
-     * GET /ws/fhir2/R4/QuestionnaireResponse/{id}
-     */
     @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
-    QuestionnaireResponse getQuestionnaireResponseById(String id);
+    QuestionnaireResponse getQuestionnaireResponseByUuid(String uuid);
 
-    /**
-     * GET /ws/fhir2/R4/QuestionnaireResponse?questionnaire={qId}&subject={patientRef}
-     */
     @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
-    IBundleProvider searchQuestionnaireResponses(String questionnaireRef, String subjectRef, Integer count);
+    List<QuestionnaireResponse> getAllQuestionnaireResponses();
 
-    /**
-     * POST /ws/fhir2/R4/QuestionnaireResponse
-     */
+    /** All responses submitted for a given questionnaire (by questionnaire UUID). */
+    @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
+    List<QuestionnaireResponse> getResponsesByQuestionnaire(String questionnaireUuid);
+
+    /** All responses submitted by a given patient (by patient UUID). */
+    @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
+    List<QuestionnaireResponse> getResponsesByPatient(String patientUuid);
+
+    /** Responses filtered by both questionnaire and patient. */
+    @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
+    List<QuestionnaireResponse> getResponsesByQuestionnaireAndPatient(String questionnaireUuid, String patientUuid);
+
     @Authorized(ClinomXPrivileges.MANAGE_CLINOM_X_DATA)
     QuestionnaireResponse createQuestionnaireResponse(QuestionnaireResponse response);
 
-    /**
-     * PUT /ws/fhir2/R4/QuestionnaireResponse/{id}
-     */
     @Authorized(ClinomXPrivileges.MANAGE_CLINOM_X_DATA)
-    QuestionnaireResponse updateQuestionnaireResponse(String id, QuestionnaireResponse response);
+    QuestionnaireResponse updateQuestionnaireResponse(String uuid, QuestionnaireResponse response);
 
-    /**
-     * DELETE /ws/fhir2/R4/QuestionnaireResponse/{id}
-     */
     @Authorized(ClinomXPrivileges.MANAGE_CLINOM_X_DATA)
-    void deleteQuestionnaireResponse(String id);
+    void deleteQuestionnaireResponse(String uuid);
 }
