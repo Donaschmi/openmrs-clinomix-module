@@ -1,15 +1,19 @@
 package org.openmrs.module.clinomx.api.impl;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.DataFormatException;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import org.openmrs.module.clinomx.api.FhirQuestionnaireResponseService;
 import org.openmrs.module.clinomx.dao.ClinomXDao;
 import org.openmrs.module.clinomx.model.QuestionnaireResponseRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,6 +27,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class FhirQuestionnaireResponseServiceImpl extends BaseOpenmrsService
         implements FhirQuestionnaireResponseService {
+
+    private static final Logger log = LoggerFactory.getLogger(FhirQuestionnaireResponseServiceImpl.class);
 
     private FhirContext fhirContext;
     private ClinomXDao dao;
@@ -45,6 +51,7 @@ public class FhirQuestionnaireResponseServiceImpl extends BaseOpenmrsService
     public List<QuestionnaireResponse> getAllQuestionnaireResponses() {
         return dao.getAllQuestionnaireResponses().stream()
                 .map(this::toFhir)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -52,6 +59,7 @@ public class FhirQuestionnaireResponseServiceImpl extends BaseOpenmrsService
     public List<QuestionnaireResponse> getResponsesByQuestionnaire(String questionnaireUuid) {
         return dao.getResponsesByQuestionnaire(questionnaireUuid).stream()
                 .map(this::toFhir)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -59,6 +67,7 @@ public class FhirQuestionnaireResponseServiceImpl extends BaseOpenmrsService
     public List<QuestionnaireResponse> getResponsesByPatient(String patientUuid) {
         return dao.getResponsesByPatient(patientUuid).stream()
                 .map(this::toFhir)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -67,6 +76,7 @@ public class FhirQuestionnaireResponseServiceImpl extends BaseOpenmrsService
                                                                                String patientUuid) {
         return dao.getResponsesByQuestionnaireAndPatient(questionnaireUuid, patientUuid).stream()
                 .map(this::toFhir)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -135,10 +145,15 @@ public class FhirQuestionnaireResponseServiceImpl extends BaseOpenmrsService
     }
 
     private QuestionnaireResponse toFhir(QuestionnaireResponseRecord record) {
-        QuestionnaireResponse r = fhirContext.newJsonParser()
-                .parseResource(QuestionnaireResponse.class, record.getFhirJson());
-        // Expose the DB uuid as the resource ID
-        r.setId(record.getUuid());
-        return r;
+        try {
+            QuestionnaireResponse r = fhirContext.newJsonParser()
+                    .parseResource(QuestionnaireResponse.class, record.getFhirJson());
+            r.setId(record.getUuid());
+            return r;
+        } catch (DataFormatException e) {
+            log.error("QuestionnaireResponse record {} contains invalid FHIR JSON and will be skipped: {}",
+                    record.getUuid(), e.getMessage());
+            return null;
+        }
     }
 }

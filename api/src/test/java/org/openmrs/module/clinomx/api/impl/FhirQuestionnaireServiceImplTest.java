@@ -246,4 +246,48 @@ public class FhirQuestionnaireServiceImplTest {
 
         verify(dao, never()).deleteQuestionnaire(any());
     }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Malformed fhirJson — graceful error handling
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @Test
+    public void getQuestionnaireByUuid_shouldReturnNullWhenFhirJsonIsNotValidJson() {
+        QuestionnaireRecord r = new QuestionnaireRecord();
+        r.setUuid("bad-uuid");
+        r.setFhirJson("{ this is not valid JSON !!!");
+        when(dao.getQuestionnaireByUuid("bad-uuid")).thenReturn(r);
+
+        Questionnaire result = service.getQuestionnaireByUuid("bad-uuid");
+
+        assertThat(result, nullValue());
+    }
+
+    @Test
+    public void getQuestionnaireByUuid_shouldReturnNullWhenFhirJsonIsWrongResourceType() {
+        String patientJson = "{\"resourceType\":\"Patient\",\"id\":\"p1\","
+                + "\"name\":[{\"family\":\"Smith\"}]}";
+        QuestionnaireRecord r = new QuestionnaireRecord();
+        r.setUuid("wrong-type-uuid");
+        r.setFhirJson(patientJson);
+        when(dao.getQuestionnaireByUuid("wrong-type-uuid")).thenReturn(r);
+
+        Questionnaire result = service.getQuestionnaireByUuid("wrong-type-uuid");
+
+        assertThat(result, nullValue());
+    }
+
+    @Test
+    public void getAllQuestionnaires_shouldSkipRecordsWithMalformedFhirJson() {
+        QuestionnaireRecord good = recordFor("uuid-good", questionnaire("fhir-1", "Good Form"));
+        QuestionnaireRecord bad  = new QuestionnaireRecord();
+        bad.setUuid("uuid-bad");
+        bad.setFhirJson("not json at all");
+        when(dao.getAllQuestionnaires()).thenReturn(Arrays.asList(good, bad));
+
+        List<Questionnaire> result = service.getAllQuestionnaires();
+
+        assertThat(result, hasSize(1));
+        assertThat(result.get(0).getTitle(), is("Good Form"));
+    }
 }
