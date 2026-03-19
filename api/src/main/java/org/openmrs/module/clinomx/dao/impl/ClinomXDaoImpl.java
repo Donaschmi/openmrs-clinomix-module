@@ -38,8 +38,11 @@ public class ClinomXDaoImpl implements ClinomXDao {
         r.setId(toInteger(row.get("questionnaire_id")));
         r.setUuid((String) row.get("uuid"));
         r.setFhirId((String) row.get("fhir_id"));
+        r.setUrl((String) row.get("url"));
+        r.setName((String) row.get("name"));
         r.setTitle((String) row.get("title"));
         r.setStatus((String) row.get("status"));
+        r.setVersion((String) row.get("version"));
         r.setFhirJson((String) row.get("fhir_json"));
         r.setDateCreated((Date) row.get("date_created"));
         r.setDateChanged((Date) row.get("date_changed"));
@@ -94,12 +97,15 @@ public class ClinomXDaoImpl implements ClinomXDao {
     public QuestionnaireRecord saveQuestionnaire(QuestionnaireRecord q) {
         if (q.getId() == null) {
             session().createSQLQuery(
-                    "INSERT INTO clinom_x_questionnaire (uuid, fhir_id, title, status, fhir_json, date_created, date_changed) " +
-                    "VALUES (:uuid, :fhirId, :title, :status, :fhirJson, :dateCreated, :dateChanged)")
+                    "INSERT INTO clinom_x_questionnaire (uuid, fhir_id, url, name, title, status, version, fhir_json, date_created, date_changed) " +
+                    "VALUES (:uuid, :fhirId, :url, :name, :title, :status, :version, :fhirJson, :dateCreated, :dateChanged)")
                 .setString("uuid", q.getUuid())
                 .setString("fhirId", q.getFhirId())
+                .setString("url", q.getUrl())
+                .setString("name", q.getName())
                 .setString("title", q.getTitle())
                 .setString("status", q.getStatus())
+                .setString("version", q.getVersion())
                 .setString("fhirJson", q.getFhirJson())
                 .setTimestamp("dateCreated", q.getDateCreated())
                 .setTimestamp("dateChanged", q.getDateChanged())
@@ -111,11 +117,14 @@ public class ClinomXDaoImpl implements ClinomXDao {
             q.setId(id);
         } else {
             session().createSQLQuery(
-                    "UPDATE clinom_x_questionnaire SET fhir_id=:fhirId, title=:title, status=:status, " +
-                    "fhir_json=:fhirJson, date_changed=:dateChanged WHERE questionnaire_id=:id")
+                    "UPDATE clinom_x_questionnaire SET fhir_id=:fhirId, url=:url, name=:name, title=:title, status=:status, " +
+                    "version=:version, fhir_json=:fhirJson, date_changed=:dateChanged WHERE questionnaire_id=:id")
                 .setString("fhirId", q.getFhirId())
+                .setString("url", q.getUrl())
+                .setString("name", q.getName())
                 .setString("title", q.getTitle())
                 .setString("status", q.getStatus())
+                .setString("version", q.getVersion())
                 .setString("fhirJson", q.getFhirJson())
                 .setTimestamp("dateChanged", q.getDateChanged())
                 .setInteger("id", q.getId())
@@ -148,6 +157,30 @@ public class ClinomXDaoImpl implements ClinomXDao {
         return queryQuestionnaires(
                 "SELECT * FROM clinom_x_questionnaire WHERE LOWER(title) LIKE LOWER(?)",
                 "%" + title + "%");
+    }
+
+    @Override
+    public List<QuestionnaireRecord> searchQuestionnairesByName(String name) {
+        return queryQuestionnaires(
+                "SELECT * FROM clinom_x_questionnaire WHERE LOWER(name) LIKE LOWER(?)",
+                "%" + name + "%");
+    }
+
+    @Override
+    public List<QuestionnaireRecord> getQuestionnairesByUrl(String url) {
+        // Exact match on the canonical URL; semver ordering is applied in the service layer.
+        return queryQuestionnaires(
+                "SELECT * FROM clinom_x_questionnaire WHERE url = ? ORDER BY questionnaire_id",
+                url);
+    }
+
+    @Override
+    public QuestionnaireRecord getQuestionnaireByUrlAndVersion(String url, String version) {
+        // COALESCE normalises NULL to '' so that NULL = NULL compares as equal in SQL.
+        List<QuestionnaireRecord> list = queryQuestionnaires(
+                "SELECT * FROM clinom_x_questionnaire WHERE url = ? AND COALESCE(version, '') = COALESCE(?, '')",
+                url, version);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override

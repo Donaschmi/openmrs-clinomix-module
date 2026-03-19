@@ -103,4 +103,30 @@
         </createIndex>
     </changeSet>
 
+
+    <changeSet id="clinom-x-2024-01-01-questionnaire-003" author="clinom-x">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="clinom_x_questionnaire" columnName="name"/></not>
+        </preConditions>
+        <comment>Add FHIR scalar columns to clinom_x_questionnaire: url (canonical identity), name (machine label), version</comment>
+        <addColumn tableName="clinom_x_questionnaire">
+            <column name="url" type="varchar(512)"/>
+            <column name="name" type="varchar(255)"/>
+            <column name="version" type="varchar(50)"/>
+        </addColumn>
+        <!--
+            url is the FHIR canonical identifier (Questionnaire.url).
+            All versions of the same questionnaire share the same url — this is
+            the correct grouping key for version comparison per the FHIR spec.
+            name is the machine-readable label (Questionnaire.name) and is indexed
+            as a standard FHIR search parameter, but NOT used for version grouping.
+        -->
+        <createIndex tableName="clinom_x_questionnaire" indexName="idx_clinom_x_questionnaire_url">
+            <column name="url"/>
+        </createIndex>
+        <createIndex tableName="clinom_x_questionnaire" indexName="idx_clinom_x_questionnaire_name">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

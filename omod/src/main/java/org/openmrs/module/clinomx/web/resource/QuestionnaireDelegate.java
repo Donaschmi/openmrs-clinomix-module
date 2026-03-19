@@ -9,6 +9,10 @@ package org.openmrs.module.clinomx.web.resource;
 public class QuestionnaireDelegate {
 
     private String uuid;
+    /** FHIR canonical URL ({@code Questionnaire.url}). Stable across versions — the primary grouping key for version comparison. */
+    private String url;
+    /** Machine-readable label (FHIR {@code Questionnaire.name}). Standard FHIR search parameter; NOT the version-grouping key. */
+    private String name;
     private String title;
     private String status;
     private String version;
@@ -22,6 +26,12 @@ public class QuestionnaireDelegate {
 
     public String getUuid() { return uuid; }
     public void setUuid(String uuid) { this.uuid = uuid; }
+
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

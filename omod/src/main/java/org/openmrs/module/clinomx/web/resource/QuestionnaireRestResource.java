@@ -22,7 +22,9 @@ import java.util.stream.Collectors;
  *
  * Endpoints:
  *   GET    /ws/rest/v1/questionnaire              — list all
- *   GET    /ws/rest/v1/questionnaire?title=X      — search by title
+ *   GET    /ws/rest/v1/questionnaire?title=X           — search by title (substring, case-insensitive)
+ *   GET    /ws/rest/v1/questionnaire?name=X            — search by machine name (substring, case-insensitive)
+ *   GET    /ws/rest/v1/questionnaire?url=X&versions=true — all versions of a canonical URL, semver oldest first
  *   GET    /ws/rest/v1/questionnaire/{uuid}       — get by uuid
  *   POST   /ws/rest/v1/questionnaire              — create  (body: {"json":"<FHIR JSON>"})
  *   POST   /ws/rest/v1/questionnaire/{uuid}       — update  (body: {"json":"<FHIR JSON>"})
@@ -43,6 +45,8 @@ public class QuestionnaireRestResource extends DelegatingCrudResource<Questionna
     public DelegatingResourceDescription getRepresentationDescription(Representation rep) {
         DelegatingResourceDescription d = new DelegatingResourceDescription();
         d.addProperty("uuid");
+        d.addProperty("url");
+        d.addProperty("name");
         d.addProperty("title");
         d.addProperty("status");
         d.addProperty("version");
@@ -113,9 +117,23 @@ public class QuestionnaireRestResource extends DelegatingCrudResource<Questionna
 
     @Override
     protected NeedsPaging<QuestionnaireDelegate> doSearch(RequestContext context) {
-        String title = context.getRequest().getParameter("title");
+        String title    = context.getRequest().getParameter("title");
+        String name     = context.getRequest().getParameter("name");
+        String url      = context.getRequest().getParameter("url");
+        String versions = context.getRequest().getParameter("versions");
+
         List<QuestionnaireDelegate> results;
-        if (title != null && !title.isEmpty()) {
+        if (url != null && !url.isEmpty() && "true".equalsIgnoreCase(versions)) {
+            // Return all versions sharing this canonical URL, semver oldest → newest.
+            // This mirrors the FHIR $versions operation on canonical resources.
+            results = getService().getVersionsByUrl(url).stream()
+                    .map(this::toDelegate)
+                    .collect(Collectors.toList());
+        } else if (name != null && !name.isEmpty()) {
+            results = getService().searchQuestionnairesByName(name).stream()
+                    .map(this::toDelegate)
+                    .collect(Collectors.toList());
+        } else if (title != null && !title.isEmpty()) {
             results = getService().searchQuestionnairesByTitle(title).stream()
                     .map(this::toDelegate)
                     .collect(Collectors.toList());
@@ -131,6 +149,8 @@ public class QuestionnaireRestResource extends DelegatingCrudResource<Questionna
         if (q == null) return null;
         QuestionnaireDelegate d = new QuestionnaireDelegate();
         d.setUuid(q.getIdElement().getIdPart());
+        d.setUrl(q.getUrl());
+        d.setName(q.getName());
         d.setTitle(q.getTitle());
         d.setStatus(q.getStatus() != null ? q.getStatus().toCode() : null);
         d.setVersion(q.getVersion());

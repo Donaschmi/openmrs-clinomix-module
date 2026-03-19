@@ -23,6 +23,21 @@ public interface FhirQuestionnaireService extends OpenmrsService {
     @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
     List<Questionnaire> searchQuestionnairesByTitle(String title);
 
+    /** Case-insensitive substring search on the FHIR {@code name} field (standard FHIR search parameter). */
+    @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
+    List<Questionnaire> searchQuestionnairesByName(String name);
+
+    /**
+     * Returns all versions of a questionnaire identified by its FHIR canonical URL
+     * ({@code Questionnaire.url}), ordered from oldest to newest (ascending semver).
+     * <p>
+     * This is the FHIR-compliant equivalent of the {@code $versions} operation:
+     * {@code url} is the stable identity shared across all versions of the same
+     * logical questionnaire, as defined in the FHIR R4 spec.
+     */
+    @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
+    List<Questionnaire> getVersionsByUrl(String url);
+
     @Authorized(ClinomXPrivileges.GET_CLINOM_X_DATA)
     Questionnaire getQuestionnaireByUuid(String uuid);
 
