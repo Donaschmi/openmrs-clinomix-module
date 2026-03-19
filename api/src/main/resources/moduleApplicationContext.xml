@@ -75,4 +75,13 @@
         <property name="transactionAttributeSource"><ref bean="transactionAttributeSource"/></property>
     </bean>
 
+    <bean parent="serviceContext">
+        <property name="moduleService">
+            <list>
+                <value>org.openmrs.module.clinomx.api.FhirQuestionnaireResponseService</value>
+                <ref bean="clinom-x.FhirQuestionnaireResponseService"/>
+            </list>
+        </property>
+    </bean>
+
 </beans>

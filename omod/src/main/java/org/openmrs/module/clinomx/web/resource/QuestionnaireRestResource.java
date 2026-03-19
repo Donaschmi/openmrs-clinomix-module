@@ -1,6 +1,7 @@
 package org.openmrs.module.clinomx.web.resource;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import org.hl7.fhir.r4.model.Questionnaire;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.clinomx.api.FhirQuestionnaireService;
@@ -82,7 +83,9 @@ public class QuestionnaireRestResource extends DelegatingCrudResource<Questionna
 
     @Override
     public QuestionnaireDelegate save(QuestionnaireDelegate delegate) {
-        Questionnaire q = FHIR_CTX.newJsonParser().parseResource(Questionnaire.class, delegate.getJson());
+        Questionnaire q = FHIR_CTX.newJsonParser()
+                .setParserErrorHandler(new LenientErrorHandler(false))
+                .parseResource(Questionnaire.class, delegate.getJson());
         Questionnaire saved;
         if (delegate.getUuid() != null && !delegate.getUuid().isEmpty()) {
             saved = getService().updateQuestionnaire(delegate.getUuid(), q);

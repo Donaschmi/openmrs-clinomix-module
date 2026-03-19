@@ -13,6 +13,25 @@ public class QuestionnaireResponseDelegate {
     /** Full FHIR R4 JSON — used as the body for create / update operations. */
     private String json;
 
+    /**
+     * Optional shorthand for create / update: the OpenMRS UUID of the Questionnaire this
+     * response belongs to.  When present, the REST resource automatically injects
+     * {@code "questionnaire": "Questionnaire/{questionnaireUuid}"} into the parsed FHIR
+     * resource before passing it to the service, so the frontend does not have to embed
+     * the reference inside the raw JSON body.
+     * If the FHIR JSON already contains a {@code questionnaire} reference it takes
+     * precedence and this field is ignored.
+     */
+    private String questionnaireUuid;
+
+    /**
+     * Optional shorthand for create / update: the OpenMRS UUID of the patient who filled
+     * out this response.  When present the REST resource injects
+     * {@code "subject": {"reference": "Patient/{patientUuid}"}} into the parsed FHIR
+     * resource.  Ignored when the FHIR JSON already contains a {@code subject} reference.
+     */
+    private String patientUuid;
+
     public QuestionnaireResponseDelegate() {}
 
     public String getUuid() { return uuid; }
@@ -32,4 +51,10 @@ public class QuestionnaireResponseDelegate {
 
     public String getJson() { return json; }
     public void setJson(String json) { this.json = json; }
+
+    public String getQuestionnaireUuid() { return questionnaireUuid; }
+    public void setQuestionnaireUuid(String questionnaireUuid) { this.questionnaireUuid = questionnaireUuid; }
+
+    public String getPatientUuid() { return patientUuid; }
+    public void setPatientUuid(String patientUuid) { this.patientUuid = patientUuid; }
 }

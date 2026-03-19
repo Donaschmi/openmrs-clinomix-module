@@ -1,7 +1,9 @@
 package org.openmrs.module.clinomx.web.resource;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
+import org.hl7.fhir.r4.model.Reference;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.clinomx.api.FhirQuestionnaireResponseService;
 import org.openmrs.module.webservices.rest.web.RequestContext;
@@ -60,6 +62,8 @@ public class QuestionnaireResponseRestResource extends DelegatingCrudResource<Qu
     public DelegatingResourceDescription getCreatableProperties() {
         DelegatingResourceDescription d = new DelegatingResourceDescription();
         d.addRequiredProperty("json");
+        d.addProperty("questionnaireUuid"); // optional shorthand — inferred into FHIR JSON
+        d.addProperty("patientUuid");       // optional shorthand — inferred into FHIR JSON
         return d;
     }
 
@@ -67,6 +71,8 @@ public class QuestionnaireResponseRestResource extends DelegatingCrudResource<Qu
     public DelegatingResourceDescription getUpdatableProperties() {
         DelegatingResourceDescription d = new DelegatingResourceDescription();
         d.addRequiredProperty("json");
+        d.addProperty("questionnaireUuid");
+        d.addProperty("patientUuid");
         return d;
     }
 
@@ -79,7 +85,22 @@ public class QuestionnaireResponseRestResource extends DelegatingCrudResource<Qu
     @Override
     public QuestionnaireResponseDelegate save(QuestionnaireResponseDelegate delegate) {
         QuestionnaireResponse r = FHIR_CTX.newJsonParser()
+                .setParserErrorHandler(new LenientErrorHandler(false))
                 .parseResource(QuestionnaireResponse.class, delegate.getJson());
+
+        // If the caller supplied a shorthand questionnaireUuid and the FHIR JSON does not
+        // already contain a questionnaire reference, inject it automatically.
+        if (delegate.getQuestionnaireUuid() != null && !delegate.getQuestionnaireUuid().isEmpty()
+                && !r.hasQuestionnaire()) {
+            r.setQuestionnaire("Questionnaire/" + delegate.getQuestionnaireUuid());
+        }
+
+        // Same for patientUuid → subject reference.
+        if (delegate.getPatientUuid() != null && !delegate.getPatientUuid().isEmpty()
+                && !r.hasSubject()) {
+            r.setSubject(new Reference("Patient/" + delegate.getPatientUuid()));
+        }
+
         QuestionnaireResponse saved;
         if (delegate.getUuid() != null && !delegate.getUuid().isEmpty()) {
             saved = getService().updateQuestionnaireResponse(delegate.getUuid(), r);

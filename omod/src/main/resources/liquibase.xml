@@ -129,4 +129,25 @@
         </createIndex>
     </changeSet>
 
+
+    <changeSet id="clinom-x-2024-01-01-questionnaire-004" author="clinom-x">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="clinom_x_questionnaire_response" columnName="questionnaire_id"/>
+        </preConditions>
+        <comment>
+            Make questionnaire_id and patient_uuid nullable in clinom_x_questionnaire_response.
+            FHIR R4 §17.8: QuestionnaireResponse.questionnaire is 0..1 (a response need not reference
+            a stored Questionnaire) and QuestionnaireResponse.subject is 0..1 (anonymous responses
+            are permitted). The NOT NULL constraints added in changeset 002 were too strict.
+            The FK on questionnaire_id is preserved; a non-null value must still reference a
+            valid row in clinom_x_questionnaire.
+        </comment>
+        <dropNotNullConstraint tableName="clinom_x_questionnaire_response"
+                               columnName="questionnaire_id"
+                               columnDataType="int"/>
+        <dropNotNullConstraint tableName="clinom_x_questionnaire_response"
+                               columnName="patient_uuid"
+                               columnDataType="char(38)"/>
+    </changeSet>
+
 </databaseChangeLog>

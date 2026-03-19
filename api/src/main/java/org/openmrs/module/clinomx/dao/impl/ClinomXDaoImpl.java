@@ -73,7 +73,7 @@ public class ClinomXDaoImpl implements ClinomXDao {
     private List<QuestionnaireRecord> queryQuestionnaires(String sql, Object... params) {
         org.hibernate.Query q = session().createSQLQuery(sql)
                 .setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE);
-        for (int i = 0; i < params.length; i++) q.setParameter(i, params[i]);
+        for (int i = 0; i < params.length; i++) q.setParameter(i + 1, params[i]);
         List<Map<String, Object>> rows = q.list();
         List<QuestionnaireRecord> result = new ArrayList<>(rows.size());
         for (Map<String, Object> row : rows) result.add(mapQuestionnaire(row));
@@ -84,7 +84,7 @@ public class ClinomXDaoImpl implements ClinomXDao {
     private List<QuestionnaireResponseRecord> queryResponses(String sql, Object... params) {
         org.hibernate.Query q = session().createSQLQuery(sql)
                 .setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE);
-        for (int i = 0; i < params.length; i++) q.setParameter(i, params[i]);
+        for (int i = 0; i < params.length; i++) q.setParameter(i + 1, params[i]);
         List<Map<String, Object>> rows = q.list();
         List<QuestionnaireResponseRecord> result = new ArrayList<>(rows.size());
         for (Map<String, Object> row : rows) result.add(mapResponse(row));

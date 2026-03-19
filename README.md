@@ -150,8 +150,8 @@ Migrations are managed by **Liquibase** (`omod/src/main/resources/liquibase.xml`
 | `response_id` | `INT` PK AI | Surrogate key |
 | `uuid` | `CHAR(38)` UNIQUE | OpenMRS UUID; exposed as the REST/FHIR resource `id` |
 | `fhir_id` | `VARCHAR(255)` UNIQUE | Internal FHIR resource ID |
-| `questionnaire_id` | `INT` FK | References `clinom_x_questionnaire.questionnaire_id` |
-| `patient_uuid` | `CHAR(38)` | Patient UUID extracted from `subject` for efficient filtering |
+| `questionnaire_id` | `INT` FK nullable | References `clinom_x_questionnaire.questionnaire_id`; `NULL` when the response does not reference a stored questionnaire (FHIR R4 §17.8: `QuestionnaireResponse.questionnaire` is 0..1) |
+| `patient_uuid` | `CHAR(38)` nullable | Patient UUID extracted from `subject`; `NULL` for anonymous responses (FHIR R4: `QuestionnaireResponse.subject` is 0..1) |
 | `status` | `VARCHAR(20)` | FHIR response status (`in-progress`, `completed`, `amended`, …) |
 | `authored` | `DATETIME` | When the response was filled out |
 | `fhir_json` | `LONGTEXT` | Complete FHIR R4 JSON representation |
@@ -298,6 +298,10 @@ GET /ws/rest/v1/questionnaireresponse/{uuid}
 
 #### Create a response
 
+The endpoint accepts three payload styles. All combinations are valid because both `questionnaire` and `subject` are optional fields in FHIR R4.
+
+**Option 1 — references embedded in the FHIR JSON (original style)**
+
 ```http
 POST /ws/rest/v1/questionnaireresponse
 Content-Type: application/json
@@ -307,9 +311,38 @@ Content-Type: application/json
 }
 ```
 
-- The `questionnaire` reference must be `"Questionnaire/{uuid}"` where the UUID is the OpenMRS UUID of an existing questionnaire.
-- The `subject.reference` must be `"Patient/{uuid}"` where the UUID is an OpenMRS patient UUID.
-- Both references are resolved to database IDs at save time.
+**Option 2 — shorthand fields alongside the FHIR JSON (recommended for frontends)**
+
+```http
+POST /ws/rest/v1/questionnaireresponse
+Content-Type: application/json
+
+{
+  "json": "{\"resourceType\":\"QuestionnaireResponse\",\"status\":\"completed\",\"item\":[{\"linkId\":\"q1\",\"answer\":[{\"valueCoding\":{\"code\":\"2\"}}]}]}",
+  "questionnaireUuid": "550e8400-e29b-41d4-a716-446655440000",
+  "patientUuid": "patient-uuid-here"
+}
+```
+
+The REST layer injects `"questionnaire": "Questionnaire/{questionnaireUuid}"` and `"subject": {"reference": "Patient/{patientUuid}"}` into the parsed FHIR object **before** passing it to the service — but only when the FHIR JSON does not already contain those references. If both are provided, the inline FHIR JSON takes precedence.
+
+**Option 3 — neither reference (anonymous / unlinked response)**
+
+```http
+POST /ws/rest/v1/questionnaireresponse
+Content-Type: application/json
+
+{
+  "json": "{\"resourceType\":\"QuestionnaireResponse\",\"status\":\"completed\",\"item\":[{\"linkId\":\"q1\",\"answer\":[{\"valueCoding\":{\"code\":\"2\"}}]}]}"
+}
+```
+
+In this case `questionnaire_id` and `patient_uuid` are stored as `NULL` and the response can still be retrieved by UUID.
+
+**Notes:**
+- When present, the `questionnaire` reference must be `"Questionnaire/{uuid}"` using the OpenMRS UUID.
+- When present, `subject.reference` must be `"Patient/{uuid}"` using the OpenMRS patient UUID.
+- The FHIR parser accepts partial date-time values (e.g. `"2024-03-15T10:15"` without seconds) and logs a warning instead of rejecting the request.
 
 #### Update a response
 
@@ -375,10 +408,10 @@ Returns the module version string. Read-only; write operations return `405 Metho
 | `deleteQuestionnaireResponse(uuid)` | No-op if not found |
 
 **Reference resolution at write time:**
-- `response.questionnaire` (`"Questionnaire/{uuid}"`) → resolved to the questionnaire's database integer id and stored in the `questionnaire_id` FK column.
-- `response.subject.reference` (`"Patient/{uuid}"`) → patient UUID extracted and stored in `patient_uuid` column.
+- `response.questionnaire` (`"Questionnaire/{uuid}"`) → resolved to the questionnaire's database integer id and stored in the `questionnaire_id` FK column. When absent or unresolvable, `questionnaire_id` is stored as `NULL`.
+- `response.subject.reference` (`"Patient/{uuid}"`) → patient UUID extracted and stored in `patient_uuid` column. When absent, `patient_uuid` is stored as `NULL`.
 
-Both columns allow efficient SQL `WHERE` filtering without scanning JSON blobs.
+Both columns allow efficient SQL `WHERE` filtering without scanning JSON blobs. Both are nullable per FHIR R4 (both fields are 0..1 on `QuestionnaireResponse`).
 
 ---
 
@@ -393,6 +426,9 @@ Both columns allow efficient SQL `WHERE` filtering without scanning JSON blobs.
 | **Resource identity** | The OpenMRS UUID is set as the FHIR `id` on every returned object; internal FHIR ids are only used at write time |
 | **Reference format** | `Questionnaire/{uuid}` and `Patient/{uuid}` literal references are preserved through the JSON round-trip |
 | **JSON round-trip fidelity** | Full FHIR JSON blob is stored and re-parsed on every read; no data is reconstructed from scalar columns |
+| **Optional references (`questionnaire`, `subject`)** | Both are 0..1 per FHIR R4; `questionnaire_id` and `patient_uuid` columns are nullable; the API accepts payloads that omit either or both |
+| **Lenient date-time parsing** | The FHIR parser is configured with `LenientErrorHandler(false)`; partial date-times (e.g. `T10:15` without seconds) produce a WARN log rather than rejecting the request |
+| **Shorthand reference injection** | `questionnaireUuid` and `patientUuid` fields on POST/PUT let callers supply references without embedding them in the FHIR JSON; injection happens only when the FHIR JSON does not already carry the reference |
 
 ---
 
